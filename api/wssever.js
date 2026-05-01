@@ -51,7 +51,7 @@ module.exports.execute = (client) => {
 				ws.send(
 					JSON.stringify({
 						event: "statistics",
-						timestamp: player.getTime(),
+						timestamp: player.currentResource?.playbackDuration ?? player.getTime(),
 						listeners: player.userdata?.channel?.members.filter((mem) => !mem.user.bot).size ?? 0,
 						tracks: player.queue.tracks?.length,
 						volume: player.volume,

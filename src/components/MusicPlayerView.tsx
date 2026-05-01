@@ -38,18 +38,36 @@ export function MusicPlayerView() {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const [progress , setProgress] = useState(null);
-
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  // Calculate progress percentage
+  const parseDuration = (val: string | number): number => {
+    if (!val) return 0;
+    if (typeof val === 'number') {
+      return val > 10000 ? val : val * 1000;
+    }
+    if (typeof val === 'string' && val.includes(':')) {
+      const parts = val.split(':').map(Number);
+      if (parts.length === 3) return (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
+      if (parts.length === 2) return (parts[0] * 60 + parts[1]) * 1000;
+    }
+    const parsed = parseInt(val);
+    return isNaN(parsed) ? 0 : (parsed > 10000 ? parsed : parsed * 1000);
+  };
+
+  const formatDisplayDuration = (val: string | number) => {
+    if (!val) return '0:00';
+    if (typeof val === 'string' && val.includes(':')) return val;
+    return formatTime(parseDuration(val));
+  };
+
+  // Calculate progress percentage with auto-detect duration format
   useEffect(() => {
     if (stats?.track?.duration) {
-      const durationMs = typeof stats.track.duration === 'string' 
-        ? (stats.track.duration.split(':').reduce((acc, time) => (60 * acc) + +time, 0) * 1000)
-        : stats.track.duration;
-      
-      const currentProgress = (stats.timestamp / durationMs) * 100;
-      setProgress(Math.min(100, Math.max(0, currentProgress)));
+      const durationMs = parseDuration(stats.track.duration);
+      if (durationMs > 0) {
+        const currentProgress = (stats.timestamp / durationMs) * 100;
+        setProgress(Math.min(100, Math.max(0, currentProgress)));
+      }
     }
   }, [stats?.timestamp, stats?.track?.duration]);
   const [volume, setVolume] = useState(50);
@@ -307,7 +325,7 @@ export function MusicPlayerView() {
                             <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider truncate">{track.author}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                             <span className="text-[10px] font-mono text-zinc-500 opacity-50 group-hover:hidden">{track.duration}</span>
+                             <span className="text-[10px] font-mono text-zinc-500 opacity-50 group-hover:hidden">{formatDisplayDuration(track.duration)}</span>
                              <button 
                                onClick={(e) => { e.stopPropagation(); sendCommand('DelTrack', { TrackPosition: idx + 1 }); }}
                                className="hidden group-hover:flex p-2 text-zinc-500 hover:text-red-500 transition-colors"
@@ -407,9 +425,7 @@ export function MusicPlayerView() {
                        const rect = e.currentTarget.getBoundingClientRect();
                        const x = e.clientX - rect.left;
                        const pct = x / rect.width;
-                       const durationMs = typeof stats.track.duration === 'string' 
-                         ? (stats.track.duration.split(':').reduce((acc, time) => (60 * acc) + +time, 0) * 1000)
-                         : stats.track.duration;
+                       const durationMs = parseDuration(stats.track.duration);
                        sendCommand('seek', { position: Math.floor(pct * durationMs) });
                      }}
                    />
@@ -421,7 +437,7 @@ export function MusicPlayerView() {
                 </div>
                 <div className="flex justify-between text-[10px] font-mono text-zinc-500 font-bold px-1">
                    <span>{formatTime(stats?.timestamp || 0)}</span>
-                   <span>{stats?.track?.duration || '0:00'}</span>
+                   <span>{formatDisplayDuration(stats?.track?.duration || '0:00')}</span>
                 </div>
               </div>
 
