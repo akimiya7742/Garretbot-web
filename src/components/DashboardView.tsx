@@ -22,6 +22,9 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
   const [saving, setSaving] = useState(false);
   const [selectedGuild, setSelectedGuild] = useState<any>(null);
   const [guildSettings, setGuildSettings] = useState<any>(null);
+  const [autoResponders, setAutoResponders] = useState<any[]>([]);
+  const [welcomeSettings, setWelcomeSettings] = useState<any>(null);
+  const [newResponder, setNewResponder] = useState({ trigger: '', response: '' });
 
   const token = localStorage.getItem('ziji-token');
   const baseUrl = import.meta.env.VITE_BotAPI || '';
@@ -58,8 +61,77 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
       });
       const data = await res.json();
       setGuildSettings(data);
+      
+      // Fetch extras
+      fetchAutoResponders(guildId);
+      fetchWelcomeSettings(guildId);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchAutoResponders = async (guildId: string) => {
+    try {
+      const res = await fetch(`${baseUrl}/guild/${guildId}/autoresponder`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setAutoResponders(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchWelcomeSettings = async (guildId: string) => {
+    try {
+      const res = await fetch(`${baseUrl}/guild/${guildId}/welcome`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setWelcomeSettings(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addAutoResponder = async () => {
+    if (!token || !selectedGuild || !newResponder.trigger || !newResponder.response) return;
+    setSaving(true);
+    try {
+      await fetch(`${baseUrl}/guild/${selectedGuild.id}/autoresponder`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newResponder)
+      });
+      setNewResponder({ trigger: '', response: '' });
+      fetchAutoResponders(selectedGuild.id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveWelcome = async () => {
+    if (!token || !selectedGuild) return;
+    setSaving(true);
+    try {
+      await fetch(`${baseUrl}/guild/${selectedGuild.id}/welcome`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(welcomeSettings)
+      });
+      alert('Welcome settings saved!');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -469,6 +541,112 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
                         {saving ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Save className="w-5 h-5" />}
                         {t('save')}
                       </button>
+                    </div>
+
+                    {/* Autoresponder Section */}
+                    <div className="space-y-6 pt-10 border-t border-white/5">
+                      <div className="flex items-center gap-3">
+                        <Terminal className="w-6 h-6 text-discord" />
+                        <h4 className="font-black text-xl uppercase tracking-tighter">Autoresponder</h4>
+                      </div>
+                      
+                      <div className="grid gap-4">
+                        {autoResponders.map((ar, idx) => (
+                          <div key={idx} className="p-4 bg-white/5 rounded-2xl flex justify-between items-center border border-white/5">
+                            <div>
+                               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Trigger</p>
+                               <p className="font-bold text-sm">{ar.trigger}</p>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-[10px] font-bold text-discord uppercase tracking-widest">Response</p>
+                               <p className="font-mono text-xs opacity-70 truncate max-w-[200px]">{ar.response}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="p-6 bg-white/5 rounded-3xl space-y-4 border border-white/10">
+                        <p className="font-bold text-xs uppercase tracking-widest text-zinc-400">Add New Responder</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input 
+                            placeholder="Trigger (e.g. hello)"
+                            className="bg-black/40 p-4 rounded-xl text-sm border border-white/10 outline-none focus:border-discord/50 transition-all font-mono"
+                            value={newResponder.trigger}
+                            onChange={e => setNewResponder({...newResponder, trigger: e.target.value})}
+                          />
+                          <input 
+                            placeholder="Response (e.g. hi there!)"
+                            className="bg-black/40 p-4 rounded-xl text-sm border border-white/10 outline-none focus:border-discord/50 transition-all font-mono"
+                            value={newResponder.response}
+                            onChange={e => setNewResponder({...newResponder, response: e.target.value})}
+                          />
+                        </div>
+                        <button 
+                          onClick={addAutoResponder}
+                          disabled={saving}
+                          className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+                        >
+                           Add Responder
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Welcome System Section */}
+                    <div className="space-y-6 pt-10 border-t border-white/5">
+                      <div className="flex items-center gap-3">
+                        <Globe className="w-6 h-6 text-green-400" />
+                        <h4 className="font-black text-xl uppercase tracking-tighter">Welcome & Goodbye</h4>
+                      </div>
+
+                      {welcomeSettings && (
+                        <div className="space-y-6">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Welcome Channel ID</label>
+                                <input 
+                                  className="w-full bg-white/5 p-4 rounded-xl text-sm border border-white/10 font-mono"
+                                  value={welcomeSettings.channel || ''}
+                                  onChange={e => setWelcomeSettings({...welcomeSettings, channel: e.target.value})}
+                                />
+                              </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Welcome Content</label>
+                                <textarea 
+                                  className="w-full bg-white/5 p-4 rounded-xl text-sm border border-white/10 h-24 font-mono"
+                                  value={welcomeSettings.content || ''}
+                                  onChange={e => setWelcomeSettings({...welcomeSettings, content: e.target.value})}
+                                />
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Goodbye Channel ID</label>
+                                <input 
+                                  className="w-full bg-white/5 p-4 rounded-xl text-sm border border-white/10 font-mono"
+                                  value={welcomeSettings.Bchannel || ''}
+                                  onChange={e => setWelcomeSettings({...welcomeSettings, Bchannel: e.target.value})}
+                                />
+                              </div>
+                              <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Goodbye Content</label>
+                                <textarea 
+                                  className="w-full bg-white/5 p-4 rounded-xl text-sm border border-white/10 h-24 font-mono"
+                                  value={welcomeSettings.Bcontent || ''}
+                                  onChange={e => setWelcomeSettings({...welcomeSettings, Bcontent: e.target.value})}
+                                />
+                              </div>
+                           </div>
+
+                           <button 
+                            onClick={saveWelcome}
+                            disabled={saving}
+                            className="w-full py-4 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 rounded-xl font-black text-sm uppercase tracking-widest transition-all"
+                           >
+                             Save Welcome Settings
+                           </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
