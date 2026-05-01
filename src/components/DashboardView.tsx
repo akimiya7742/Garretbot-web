@@ -1,6 +1,6 @@
 
 import { motion } from "motion/react";
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Activity, ShieldCheck, Hash, UserCircle, Globe, Terminal, Info, AlertCircle } from "lucide-react";
 import { BotInfo } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
@@ -127,7 +127,7 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
             </h3>
             {!user && (
               <a 
-                href="/api/auth/discord/login" 
+                href={`${import.meta.env.VITE_BotAPI || ''}/api/auth/discord/login`} 
                 className="text-[10px] uppercase tracking-widest font-bold text-discord hover:text-white transition-colors"
               >
                 {t('login')}

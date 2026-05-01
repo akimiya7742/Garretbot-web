@@ -5,10 +5,12 @@ export interface BotInfo {
   clientName: string;
   clientId: string;
   avatars: string;
+  inviteUrl?: string;
+  [key: string]: any;
 }
 
 export async function fetchBotInfo(): Promise<BotInfo> {
-  const response = await fetch(process.env.BotAPI || 'https://api.ziji.best');
+  const response = await fetch(import.meta.env.VITE_BotAPI || 'https://api.ziji.best');
   if (!response.ok) {
     throw new Error('Failed to fetch bot info');
   }

@@ -132,7 +132,7 @@ export function Navigation() {
             </div>
           ) : (
             <a 
-              href="/api/auth/discord/login"
+              href={`${import.meta.env.VITE_BotAPI || ''}/auth/discord/login`}
               className="flex items-center gap-2 px-6 py-2 bg-discord hover:brightness-110 text-white rounded-full text-sm font-bold transition-all hover:glow"
             >
               <Bot className="w-4 h-4" />

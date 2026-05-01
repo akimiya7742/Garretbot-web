@@ -74,7 +74,7 @@ export function Hero({ botInfo }: HeroProps) {
             {t('inviteBot')}
           </a>
           <a 
-            href="/api/auth/discord/login"
+            href={`${import.meta.env.VITE_BotAPI || ''}/api/auth/discord/login`}
             className="px-10 py-4 glass hover:bg-white/10 text-white rounded-2xl font-bold text-lg transition-all"
           >
             {t('loginDiscord')}
