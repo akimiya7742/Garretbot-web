@@ -55,7 +55,7 @@ export function Navigation() {
           <div className="p-2 bg-gradient-to-br from-discord to-vibrant-pink rounded-xl group-hover:rotate-12 transition-transform">
             <Bot className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-extrabold tracking-tighter uppercase">Ziji<span className="text-discord">.</span>Best</span>
+          <span className="text-xl font-extrabold tracking-tighter uppercase">Ziji<span className="text-discord">.</span>BOT</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -72,6 +72,14 @@ export function Navigation() {
           >
             {t('dashboard')}
           </NavLink>
+          {user && (
+            <NavLink 
+              to="/dashboard/music"
+              className={({ isActive }) => `text-sm font-semibold uppercase tracking-widest transition-colors hover:text-white ${isActive ? activeStyles : inactiveStyles}`}
+            >
+              Music
+            </NavLink>
+          )}
           
           {/* Language Switcher */}
           <div className="relative">
@@ -160,6 +168,9 @@ export function Navigation() {
         >
           <Link to="/" onClick={() => setIsOpen(false)} className="text-left py-2 text-lg font-medium">{t('home')}</Link>
           <Link to="/dashboard" onClick={() => setIsOpen(false)} className="text-left py-2 text-lg font-medium">{t('dashboard')}</Link>
+          {user && (
+            <Link to="/dashboard/music" onClick={() => setIsOpen(false)} className="text-left py-2 text-lg font-medium">Music Player</Link>
+          )}
           <div className="flex items-center gap-4 py-2">
             {languages.map((lang) => (
               <button

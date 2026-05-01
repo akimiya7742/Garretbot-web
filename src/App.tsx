@@ -12,6 +12,7 @@ import { BotInfo, fetchBotInfo } from "./services/api";
 import { Features } from "./components/Features";
 import { TermsView, PrivacyView } from "./components/LegalViews";
 import { LoginSuccess } from "./components/LoginSuccess";
+import { MusicPlayerView } from "./components/MusicPlayerView";
 
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 
@@ -63,6 +64,7 @@ function AppContent() {
               error={error} 
             />
           } />
+          <Route path="/dashboard/music" element={<MusicPlayerView />} />
           <Route path="/terms" element={<TermsView />} />
           <Route path="/privacy" element={<PrivacyView />} />
           <Route path="/login-success" element={<LoginSuccess />} />
