@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Play, Pause, SkipForward, SkipBack, Volume2, 
   Repeat, Shuffle, Music, Users, ListMusic, 
-  Search, SlidersHorizontal, LayoutGrid, Heart 
+  Search, SlidersHorizontal, LayoutGrid, Heart,
+  ShieldCheck, Activity, Trash2, MoreVertical
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -24,8 +25,11 @@ interface PlayerStats {
   volume: number;
   paused: boolean;
   repeatMode: string;
+  autoPlay: boolean;
+  lockStatus: boolean;
   track: Track | null;
   queue: Track[];
+  related: Track[];
 }
 
 export function MusicPlayerView() {
@@ -35,7 +39,17 @@ export function MusicPlayerView() {
   const [connected, setConnected] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
+  // Calculate progress percentage
+  useEffect(() => {
+    if (stats?.track?.duration) {
+      const durationMs = typeof stats.track.duration === 'string' 
+        ? (stats.track.duration.split(':').reduce((acc, time) => (60 * acc) + +time, 0) * 1000)
+        : stats.track.duration;
+      
+      const currentProgress = (stats.timestamp / durationMs) * 100;
+      setProgress(Math.min(100, Math.max(0, currentProgress)));
+    }
+  }, [stats?.timestamp, stats?.track?.duration]);
   const [volume, setVolume] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -213,51 +227,104 @@ export function MusicPlayerView() {
                     <div 
                       key={idx} 
                       className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-white/5"
-                      onClick={() => sendCommand('play', { trackUrl: track.url })}
                     >
                       <img src={track.thumbnail} alt={track.title} className="w-12 h-12 rounded-xl object-cover" />
                       <div className="flex-grow overflow-hidden">
                         <h4 className="font-bold text-sm truncate">{track.title}</h4>
                         <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider truncate">{track.author}</p>
                       </div>
-                      <button className="p-2 opacity-0 group-hover:opacity-100 bg-discord rounded-lg text-white transition-all transform scale-90 group-hover:scale-100">
-                        <Play className="w-4 h-4 fill-current" />
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); sendCommand('play', { trackUrl: track.url }); }}
+                          className="p-2 bg-discord rounded-lg text-white transition-all transform scale-90 hover:scale-100"
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); sendCommand('Playnext', { trackUrl: track.url, TrackPosition: 1 }); }}
+                          className="p-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-all text-[10px] font-black uppercase tracking-widest px-3"
+                        >
+                          Next
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                   <h3 className="font-black text-3xl tracking-tight">Up Next</h3>
-                   <div className="flex gap-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                     <span>{stats?.tracks || 0} tracks</span>
-                   </div>
-                </div>
-
-                <div className="space-y-1">
-                  {stats?.queue && stats.queue.length > 0 ? (
-                    stats.queue.map((track, idx) => (
-                      <div 
-                        key={idx} 
-                        className="group flex items-center gap-4 p-4 rounded-3xl hover:bg-white/[0.03] transition-all cursor-pointer border border-transparent hover:border-white/5"
-                      >
-                        <span className="w-6 text-center font-bold text-zinc-600 group-hover:text-discord transition-colors">{idx + 1}</span>
-                        <img src={track.thumbnail} alt={track.title} className="w-12 h-12 rounded-xl object-cover border border-white/5 shadow-lg" />
-                        <div className="flex-grow overflow-hidden">
-                          <h4 className="font-bold text-sm truncate">{track.title}</h4>
-                          <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider truncate">{track.author}</p>
-                        </div>
-                        <span className="text-[10px] font-mono text-zinc-500 opacity-50">{track.duration}</span>
+              <div className="space-y-12">
+                {/* Related Tracks Section */}
+                {stats?.related && stats.related.length > 0 && (
+                   <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-black text-3xl tracking-tight">Related Songs</h3>
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Suggestions</p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="py-20 text-center flex flex-col items-center gap-4 opacity-30">
-                       <Music className="w-12 h-12" />
-                       <p className="italic font-medium">Your queue is empty</p>
-                    </div>
-                  )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {stats.related.slice(0, 4).map((track, idx) => (
+                          <div 
+                            key={idx}
+                            className="glass p-4 rounded-3xl flex items-center gap-4 hover:bg-white/5 transition-all cursor-pointer group"
+                            onClick={() => sendCommand('play', { trackUrl: track.url })}
+                          >
+                             <div className="relative w-16 h-16 shrink-0">
+                               <img src={track.thumbnail} alt={track.title} className="w-full h-full rounded-2xl object-cover" />
+                               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl">
+                                 <Play className="w-6 h-6 text-white fill-current" />
+                               </div>
+                             </div>
+                             <div className="flex-grow min-w-0">
+                               <h4 className="font-bold text-sm truncate">{track.title}</h4>
+                               <p className="text-[10px] font-bold text-zinc-500 uppercase truncate">{track.author}</p>
+                             </div>
+                          </div>
+                        ))}
+                      </div>
+                   </div>
+                )}
+
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                     <h3 className="font-black text-3xl tracking-tight">Up Next</h3>
+                     <div className="flex gap-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                       <span>{stats?.tracks || 0} tracks</span>
+                     </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    {stats?.queue && stats.queue.length > 0 ? (
+                      stats.queue.map((track, idx) => (
+                        <div 
+                          key={idx} 
+                          className="group flex items-center gap-4 p-4 rounded-3xl hover:bg-white/[0.03] transition-all cursor-pointer border border-transparent hover:border-white/5"
+                        >
+                          <span className="w-6 text-center font-bold text-zinc-600 group-hover:text-discord transition-colors">{idx + 1}</span>
+                          <img src={track.thumbnail} alt={track.title} className="w-12 h-12 rounded-xl object-cover border border-white/5 shadow-lg" />
+                          <div className="flex-grow overflow-hidden">
+                            <h4 className="font-bold text-sm truncate">{track.title}</h4>
+                            <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider truncate">{track.author}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <span className="text-[10px] font-mono text-zinc-500 opacity-50 group-hover:hidden">{track.duration}</span>
+                             <button 
+                               onClick={(e) => { e.stopPropagation(); sendCommand('DelTrack', { TrackPosition: idx + 1 }); }}
+                               className="hidden group-hover:flex p-2 text-zinc-500 hover:text-red-500 transition-colors"
+                             >
+                               <Trash2 className="w-4 h-4" />
+                             </button>
+                             <button className="hidden group-hover:flex p-2 text-zinc-500 hover:text-white transition-colors">
+                               <MoreVertical className="w-4 h-4" />
+                             </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-20 text-center flex flex-col items-center gap-4 opacity-30">
+                         <Music className="w-12 h-12" />
+                         <p className="italic font-medium">Your queue is empty</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -266,7 +333,7 @@ export function MusicPlayerView() {
       </div>
 
       {/* Now Playing Fixed Right Panel */}
-      <div className="w-[450px] border-l border-white/5 flex flex-col hidden xl:flex bg-gradient-to-b from-white/[0.02] to-transparent">
+      <div className="w-80 lg:w-[450px] border-l border-white/5 flex flex-col hidden md:flex bg-gradient-to-b from-white/[0.02] to-transparent">
         <div className="p-8 flex flex-col h-full gap-8">
            <div className="flex items-center justify-between">
               <button 
@@ -330,9 +397,22 @@ export function MusicPlayerView() {
 
            <div className="space-y-6 pt-4">
               <div className="space-y-3">
-                <div className="relative h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                <div className="relative h-1 w-full bg-white/5 rounded-full cursor-pointer group">
+                   <div 
+                     className="absolute inset-0 z-20 cursor-pointer"
+                     onClick={(e) => {
+                       if (!stats?.track?.duration) return;
+                       const rect = e.currentTarget.getBoundingClientRect();
+                       const x = e.clientX - rect.left;
+                       const pct = x / rect.width;
+                       const durationMs = typeof stats.track.duration === 'string' 
+                         ? (stats.track.duration.split(':').reduce((acc, time) => (60 * acc) + +time, 0) * 1000)
+                         : stats.track.duration;
+                       sendCommand('seek', { position: Math.floor(pct * durationMs) });
+                     }}
+                   />
                    <motion.div 
-                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-discord to-vibrant-pink shadow-glow"
+                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-discord to-vibrant-pink shadow-glow z-10"
                      initial={{ width: 0 }}
                      animate={{ width: `${progress}%` }}
                    />
@@ -343,21 +423,41 @@ export function MusicPlayerView() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-6">
-                 <button onClick={() => sendCommand('repeat', { mode: (parseInt(stats?.repeatMode || '0') + 1) % 3 })} className={`p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors ${stats?.repeatMode !== 'off' ? 'text-discord' : 'text-zinc-600'}`}>
+              <div className="flex items-center justify-center gap-4">
+                 <button 
+                  onClick={() => sendCommand('Loop')} 
+                  className={`p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors ${stats?.repeatMode !== 'off' ? 'text-discord' : 'text-zinc-600'}`}
+                  title="Loop Mode"
+                 >
                    <Repeat className="w-5 h-5" />
                  </button>
-                 <div className="flex items-center gap-4">
+                 <button 
+                  onClick={() => sendCommand('AutoPlay')} 
+                  className={`p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors ${stats?.autoPlay ? 'text-green-500' : 'text-zinc-600'}`}
+                  title="AutoPlay"
+                 >
+                   <Activity className="w-5 h-5" />
+                 </button>
+                 <button 
+                  onClick={() => sendCommand('Lock')} 
+                  className={`p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors ${stats?.lockStatus ? 'text-vibrant-pink' : 'text-zinc-600'}`}
+                  title="Lock Player"
+                 >
+                   <ShieldCheck className="w-5 h-5" />
+                 </button>
+
+                 <div className="flex items-center gap-4 mx-2">
                     <button onClick={() => sendCommand('back')} className="text-zinc-500 hover:text-white transition-colors"><SkipBack className="w-6 h-6 fill-current" /></button>
                     <button 
                       onClick={() => sendCommand('pause')}
-                      className="w-20 h-20 bg-discord hover:brightness-110 rounded-[2.5rem] flex items-center justify-center shadow-glow text-white transition-transform active:scale-95"
+                      className="w-16 h-16 bg-discord hover:brightness-110 rounded-3xl flex items-center justify-center shadow-glow text-white transition-transform active:scale-95"
                     >
-                      {stats?.paused ? <Play className="w-8 h-8 fill-current translate-x-0.5" /> : <Pause className="w-8 h-8 fill-current" />}
+                      {stats?.paused ? <Play className="w-6 h-6 fill-current translate-x-0.5" /> : <Pause className="w-6 h-6 fill-current" />}
                     </button>
                     <button onClick={() => sendCommand('skip')} className="text-zinc-500 hover:text-white transition-colors"><SkipForward className="w-6 h-6 fill-current" /></button>
                  </div>
-                 <button onClick={() => sendCommand('shuffle')} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors text-zinc-600 hover:text-white">
+
+                 <button onClick={() => sendCommand('Shuffle')} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors text-zinc-600 hover:text-white" title="Shuffle">
                    <Shuffle className="w-5 h-5" />
                  </button>
               </div>
