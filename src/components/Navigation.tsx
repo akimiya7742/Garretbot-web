@@ -15,14 +15,18 @@ export function Navigation() {
   useEffect(() => {
     const token = localStorage.getItem('ziji-token');
     if (token) {
-      fetch('/api/user/me', {
+      const baseUrl = import.meta.env.VITE_BotAPI || '';
+      fetch(`${baseUrl}/user/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
       .then(res => res.json())
       .then(data => setUser(data))
-      .catch(() => localStorage.removeItem('ziji-token'));
+      .catch(() => {
+        console.error('Navigation: Failed to fetch user info');
+        // localStorage.removeItem('ziji-token');
+      });
     }
   }, []);
 

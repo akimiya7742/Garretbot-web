@@ -7,11 +7,15 @@ export function LoginSuccess() {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    console.log('LoginSuccess: Received token:', token ? '***' : 'null');
     if (token) {
+      console.log('LoginSuccess: Setting token to localStorage');
       localStorage.setItem('ziji-token', token);
+      console.log('LoginSuccess: Token in localStorage after set:', localStorage.getItem('ziji-token') ? 'exists' : 'missing');
       window.location.href = '/#/dashboard';
       window.location.reload();
     } else {
+      console.error('LoginSuccess: No token found in URL');
       navigate('/');
     }
   }, [searchParams, navigate]);

@@ -18,14 +18,18 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
   useEffect(() => {
     const token = localStorage.getItem('ziji-token');
     if (token) {
-      fetch('/user/me', {
+      const baseUrl = import.meta.env.VITE_BotAPI || '';
+      fetch(`${baseUrl}/user/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
       .then(res => res.json())
       .then(data => setUser(data))
-      .catch(() => localStorage.removeItem('ziji-token'));
+      .catch((err) => {
+        console.error('Dashboard: Failed to fetch user info', err);
+        // localStorage.removeItem('ziji-token');
+      });
     }
   }, []);
 
@@ -127,7 +131,7 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
             </h3>
             {!user && (
               <a 
-                href={`${import.meta.env.VITE_BotAPI || ''}/api/auth/discord/login`} 
+                href={`${import.meta.env.VITE_BotAPI || ''}/auth/discord/login`} 
                 className="text-[10px] uppercase tracking-widest font-bold text-discord hover:text-white transition-colors"
               >
                 {t('login')}
