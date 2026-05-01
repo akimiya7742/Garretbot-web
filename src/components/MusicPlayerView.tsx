@@ -38,6 +38,8 @@ export function MusicPlayerView() {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [progress , setProgress] = useState(null);
+
   const [error, setError] = useState<string | null>(null);
   // Calculate progress percentage
   useEffect(() => {

@@ -18,6 +18,11 @@ module.exports.execute = (client) => {
 		logger.debug("[WebSocket] Client connected.");
 
 		let user = null;
+				/**
+		 * Player instance for the connected user. Will be set after authentication and fetching user's voice connection.
+		 * Player instance for the connected user. Will be set after authentication and fetching user's voice connection.
+		 * @type {Player|null}
+		 */
 		let player = null;
 		let authenticated = false;
 
@@ -52,8 +57,17 @@ module.exports.execute = (client) => {
 						volume: player.volume,
 						paused: player.isPaused,
 						repeatMode: player.loop(),
+						autoPlay: player.autoPlay(),
+						lockStatus: player.userdata.LockStatus,
 						track: currentTrack,
 						queue: queueTracks,
+						related: player.relatedTracks?.map(t => ({
+							title: t.title,
+							url: t.url,
+							duration: t.duration,
+							thumbnail: t.thumbnail,
+							author: t?.metadata?.author,
+						})) || [],
 						filters: null,
 						shuffle: null,
 					}),
@@ -138,10 +152,27 @@ module.exports.execute = (client) => {
 						await player.setVolume(Number(data.volume));
 						break;
 					case "loop":
-						player.loop(["off", "track", "queue"][Number(data.mode)]);
+					case "Loop": {
+						const repeatt = ["off", "track", "queue"];
+						const currentMode = player.loop();
+						const nextIndex = (repeatt.indexOf(currentMode) + 1) % 3;
+						player.autoPlay(false);
+						player.loop(repeatt[nextIndex]);
 						break;
+					}
 					case "shuffle":
+					case "Shuffle":
 						await player.shuffle();
+						break;
+					case "seek":
+						await player.seek(data.position);
+						break;
+					case "Lock":
+						player.userdata.LockStatus = !player.userdata.LockStatus;
+						break;
+					case "AutoPlay":
+						player.loop("off");
+						player.autoPlay(!player.autoPlay());
 						break;
 					case "Playnext":
 						if (player.queue.isEmpty || !data.trackUrl || !data.TrackPosition) break;
@@ -155,9 +186,6 @@ module.exports.execute = (client) => {
 					case "DelTrack":
 						if (player.queue.isEmpty || !data.TrackPosition) break;
 						player.remove(data.TrackPosition - 1);
-						break;
-					case "seek":
-						await player.seek(data.position);
 						break;
 				}
 			} catch (error) {

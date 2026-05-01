@@ -2,6 +2,8 @@ const { getManager } = require("ziplayer");
 const { useHooks } = require("zihooks");
 const { lyricsExt } = require("@ziplayer/extension");
 const jwt = require("jsonwebtoken");
+const express = require("express");
+const router = express.Router();
 
 module.exports.data = {
 	name: "musicRoutes",
@@ -26,11 +28,10 @@ const authenticate = (req, res, next) => {
 
 router.get("/music/search", authenticate, async (req, res) => {
 	try {
-		const { q } = req.query;
+		const { q, source = "youtube" } = req.query;
 		if (!q) return res.status(400).json({ error: "Missing query" });
 		const manager = getManager();
-		// source can be youtube, spotify, etc. default to youtube for searching
-		const result = await manager.search(q, "youtube");
+		const result = await manager.search(q, source);
 		res.json({ results: result.tracks, total: result.tracks.length });
 	} catch (error) {
 		res.status(500).json({ error: error.message });
@@ -39,7 +40,7 @@ router.get("/music/search", authenticate, async (req, res) => {
 
 router.get("/music/lyrics", authenticate, async (req, res) => {
 	try {
-		const { q } = req.query;
+		const q = req.query?.query || req.query?.q;
 		if (!q) return res.status(400).json({ error: "Missing query" });
 		const lyricsext = new lyricsExt();
 		const lyrics = await lyricsext.fetch({ title: q });
