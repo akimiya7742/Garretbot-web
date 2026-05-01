@@ -13,6 +13,21 @@ interface DashboardViewProps {
 
 export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
   const { t } = useLanguage();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('ziji-token');
+    if (token) {
+      fetch('/api/user/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => setUser(data))
+      .catch(() => localStorage.removeItem('ziji-token'));
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -110,35 +125,54 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
               <UserCircle className="w-7 h-7 text-discord" />
               {t('account')}
             </h3>
-            <button className="text-[10px] uppercase tracking-widest font-bold text-zinc-600 hover:text-white transition-colors">{t('login')}</button>
+            {!user && (
+              <a 
+                href="/api/auth/discord/login" 
+                className="text-[10px] uppercase tracking-widest font-bold text-discord hover:text-white transition-colors"
+              >
+                {t('login')}
+              </a>
+            )}
           </div>
           
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-[2rem] bg-zinc-900 border border-white/5 flex items-center justify-center text-3xl font-black text-zinc-700">
-              U
-            </div>
+            {user ? (
+               <div className="relative group">
+               <img 
+                 src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} 
+                 alt={user.username} 
+                 className="w-20 h-20 rounded-[2rem] border-2 border-discord group-hover:rotate-6 transition-transform"
+               />
+             </div>
+            ) : (
+              <div className="w-20 h-20 rounded-[2rem] bg-zinc-900 border border-white/5 flex items-center justify-center text-3xl font-black text-zinc-700">
+                U
+              </div>
+            )}
             <div>
-              <p className="font-black text-2xl tracking-tight">{t('guest')}</p>
-              <p className="text-zinc-600 font-mono text-sm">#guest_1337</p>
+              <p className="font-black text-2xl tracking-tight">{user ? user.username : t('guest')}</p>
+              <p className="text-zinc-600 font-mono text-sm">{user ? `#${user.id.slice(-4)}` : '#guest_1337'}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
             <div className="flex justify-between items-center p-5 bg-white/[0.02] border border-white/5 rounded-2xl">
               <span className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest">{t('level')}</span>
-              <span className="font-mono text-xl font-bold text-discord">0</span>
+              <span className="font-mono text-xl font-bold text-discord">{user ? user.level : 0}</span>
             </div>
             <div className="flex justify-between items-center p-5 bg-white/[0.02] border border-white/5 rounded-2xl">
               <span className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest">{t('balance')}</span>
-              <span className="font-mono text-xl font-bold text-yellow-500">0 🪙</span>
+              <span className="font-mono text-xl font-bold text-yellow-500">{user ? user.coin : 0} 🪙</span>
             </div>
           </div>
 
-          <div className="p-4 bg-discord/5 border border-discord/10 rounded-2xl">
-            <p className="text-[10px] font-bold text-discord text-center uppercase tracking-[0.1em]">
-              {t('syncPrompt')}
-            </p>
-          </div>
+          {!user && (
+            <div className="p-4 bg-discord/5 border border-discord/10 rounded-2xl">
+              <p className="text-[10px] font-bold text-discord text-center uppercase tracking-[0.1em]">
+                {t('syncPrompt')}
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* Detailed Bot Stats */}

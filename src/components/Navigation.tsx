@@ -1,14 +1,36 @@
 
 import { motion, AnimatePresence } from "motion/react";
-import { Bot, LayoutDashboard, Github, Menu, X, Languages } from "lucide-react";
-import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Bot, LayoutDashboard, Github, Menu, X, Languages, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useLanguage, Language } from "../context/LanguageContext";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [showLang, setShowLang] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('ziji-token');
+    if (token) {
+      fetch('/api/user/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => setUser(data))
+      .catch(() => localStorage.removeItem('ziji-token'));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('ziji-token');
+    setUser(null);
+    navigate('/');
+  };
 
   const activeStyles = "text-white border-b-2 border-discord pb-1";
   const inactiveStyles = "text-zinc-400";
@@ -91,13 +113,32 @@ export function Navigation() {
           >
             <Github className="w-5 h-5" />
           </a>
-          <Link 
-            to="/dashboard"
-            className="flex items-center gap-2 px-6 py-2 bg-discord hover:brightness-110 text-white rounded-full text-sm font-bold transition-all hover:glow"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            {t('enterDashboard')}
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Link to="/dashboard" className="flex items-center gap-3 glass px-4 py-2 rounded-xl group hover:bg-white/5 transition-colors">
+                <img 
+                  src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} 
+                  alt={user.username} 
+                  className="w-8 h-8 rounded-full border border-discord/50 group-hover:glow"
+                />
+                <span className="text-sm font-bold">{user.username}</span>
+              </Link>
+              <button 
+                onClick={handleLogout}
+                className="text-xs font-bold text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <a 
+              href="/api/auth/discord/login"
+              className="flex items-center gap-2 px-6 py-2 bg-discord hover:brightness-110 text-white rounded-full text-sm font-bold transition-all hover:glow"
+            >
+              <Bot className="w-4 h-4" />
+              {t('enterDashboard')}
+            </a>
+          )}
         </div>
 
         {/* Mobile Toggle */}

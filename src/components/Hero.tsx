@@ -66,19 +66,19 @@ export function Hero({ botInfo }: HeroProps) {
           className="flex flex-wrap items-center justify-center gap-4"
         >
           <a 
-            href="https://discord.com/oauth2/authorize?client_id=1005716197259612193&permissions=8&scope=bot"
-            target="_blank"
+            href={botInfo?.inviteUrl || "https://discord.com/oauth2/authorize?client_id=1005716197259612193&permissions=8&scope=bot"} 
+            target="_blank" 
             rel="noreferrer"
             className="px-10 py-4 bg-white text-black hover:bg-zinc-200 rounded-2xl font-bold text-lg transition-all shadow-xl"
           >
             {t('inviteBot')}
           </a>
-          <Link 
-            to="/dashboard"
+          <a 
+            href="/api/auth/discord/login"
             className="px-10 py-4 glass hover:bg-white/10 text-white rounded-2xl font-bold text-lg transition-all"
           >
-            {t('openDashboard')}
-          </Link>
+            {t('loginDiscord')}
+          </a>
         </motion.div>
 
         <motion.div 

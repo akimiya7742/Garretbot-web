@@ -13,13 +13,14 @@ export const translations: Translations = {
   // Navigation
   home: { vi: 'Trang chủ', en: 'Home', ja: 'ホーム' },
   dashboard: { vi: 'Bảng điều khiển', en: 'Dashboard', ja: 'ダッシュボード' },
-  enterDashboard: { vi: 'Vào Dashboard', en: 'Enter Dashboard', ja: 'ダッシュボードへ' },
+  enterDashboard: { vi: 'Đăng nhập Discord', en: 'Login Discord', ja: 'Discordでログイン' },
+  loginDiscord: { vi: 'Đăng nhập Discord', en: 'Login with Discord', ja: 'Discordでログイン' },
   
   // Hero
   heroTitle: { vi: 'Nâng tầm cộng đồng Discord của bạn', en: 'Elevate your Discord community', ja: 'あなたのDiscordコミュニティを高める' },
   heroSub: { vi: 'Ziji là bot Discord đa năng, hiệu suất cao được thiết kế để phát triển linh hoạt. Từ âm nhạc giải trí đến quản trị hệ thống - Ziji xử lý mọi thứ mượt mà.', en: 'Ziji is a versatile, high-performance Discord bot designed for modular growth. From entertainment music to system administration - Ziji handles everything smoothly.', ja: 'Zijiは、モジュール式の成長のために設計された多目的で高性能なDiscordボットです。エンターテインメントミュージックからシステム管理まで、Zijiはすべてをスムーズに処理します。' },
   inviteBot: { vi: 'Mời Ziji Bot', en: 'Invite Ziji Bot', ja: 'Zijiボットを招待' },
-  openDashboard: { vi: 'Mở Dashboard', en: 'Open Dashboard', ja: 'ダッシュボードを開く' },
+  openDashboard: { vi: 'Đăng nhập', en: 'Login', ja: 'ログイン' },
   
   // Features
   featTitle: { vi: 'Mô-đun hóa sự Phát triển', en: 'Modularize the Growth', ja: '成長をモジュール化する' },
