@@ -18,7 +18,7 @@ export function DashboardView({ botInfo, loading, error }: DashboardViewProps) {
   useEffect(() => {
     const token = localStorage.getItem('ziji-token');
     if (token) {
-      fetch('/api/user/me', {
+      fetch('/user/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
