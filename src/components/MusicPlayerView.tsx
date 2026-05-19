@@ -60,6 +60,7 @@ export function MusicPlayerView() {
     if (typeof val === 'string' && val.includes(':')) return val;
     return formatTime(parseDuration(val));
   };
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     audioRef.current = new Audio(SILENT_SOUND_URL);
     audioRef.current.loop = true;
